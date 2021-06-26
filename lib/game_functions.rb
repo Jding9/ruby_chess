@@ -179,7 +179,7 @@ module Board_Checks
         enemy_filtered_board.each do |pieceandposition|
             piece = pieceandposition[0]
             position = pieceandposition[1]
-            enemy_ending_positions << possible_moves(position, piece, enemy_turn)
+            enemy_ending_positions << possible_moves(position, piece, enemy_turn, board)
             enemy_ending_positions.flatten
         end
 
@@ -230,11 +230,12 @@ module Board_Checks
         # for each possible move, play out a scenario where that move is made and then check to see if a "check" is still in place
         # if a check is still in place then add the "statuses" array a "check" string
         # if a check is no long in place, then add to the "statuses" array a "safe" string
+
         active_filtered_board.each do |pieceandposition|
             piece = pieceandposition[0]
             starting_pos = pieceandposition[1]
             test_board = @board.dup.map(&:dup)
-            possible_moves = possible_moves(pieceandposition[1], pieceandposition[0])
+            possible_moves = possible_moves(pieceandposition[1], pieceandposition[0], turn, board)
             possible_moves.each do |ending_move|
                 test_board = update_board(starting_pos, ending_move, piece, test_board)
                 if check_for_check(test_board)
@@ -284,10 +285,10 @@ module Board_Checks
             piece = pieceandposition[0]
             starting_pos = pieceandposition[1]
             test_board = @board.dup.map(&:dup)
-            possible_moves = possible_moves(pieceandposition[1], pieceandposition[0])
+            possible_moves = possible_moves(pieceandposition[1], pieceandposition[0], @turn, test_board)
             possible_moves.each do |ending_move|
-                test_board = update_board(starting_pos, ending_move, piece, test_board)
-                if check_for_check(test_board)
+                new_board = update_board(starting_pos, ending_move, piece, test_board.dup.map(&:dup))
+                if check_for_check(new_board)
                     statuses << "check"
                 else
                     statuses << "safe"
@@ -295,7 +296,9 @@ module Board_Checks
             end
         end
 
-        if statuses.exclude?("safe")
+        active_filtered_board = active_filtered_board.flatten(1)
+
+        if !statuses.include?("safe")
             return true
         else
             return false

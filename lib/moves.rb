@@ -15,16 +15,16 @@ module Moves
             return false
         else
             if turn == 1
-                !@w_pieces.include?(@board[row][column])
+                !@w_pieces.include?(board[row][column])
             else
-                !@b_pieces.include?(@board[row][column])
+                !@b_pieces.include?(board[row][column])
             end
         end
         
     end
 
     #returns all available positions that a piece can move
-    def possible_moves(starting_position, actual_piece, turn = @turn)
+    def possible_moves(starting_position, actual_piece, turn = @turn, board = @board)
         row = starting_position[0]
         column = starting_position[1]
         potential_moves = []
@@ -44,15 +44,15 @@ module Moves
         if actual_piece == $w_pawn
             # if the white pawn is in its original spot, then it can move two spots or one spot
             if row == 1
-                potential_moves << [row+1, column] if @board[row+1][column] == ' '
-                potential_moves << [row+2, column] if @board[row+2][column] == ' '
+                potential_moves << [row+1, column] if board[row+1][column] == ' '
+                potential_moves << [row+2, column] if board[row+2][column] == ' '
             else
-                potential_moves << [row+1, column] if @board[row+1][column] == ' '
+                potential_moves << [row+1, column] if board[row+1][column] == ' '
             end
 
             # can take black pieces, but only if they are available diagonally
-            potential_moves << [row+1, column+1] if @b_pieces.include?(@board[row+1][column+1])
-            potential_moves << [row+1, column-1] if @b_pieces.include?(@board[row+1][column-1])
+            potential_moves << [row+1, column+1] if @b_pieces.include?(board[row+1][column+1])
+            potential_moves << [row+1, column-1] if @b_pieces.include?(board[row+1][column-1])
 
             # can take black pawns under special en-passant rule
             if @en_passant_piece != []
@@ -68,15 +68,15 @@ module Moves
         if actual_piece == $b_pawn
             # if the black pawn is in its original spot, then it can move two spots or one spot
             if row == 6
-                potential_moves << [row-1, column] if @board[row-1][column] == ' '
-                potential_moves << [row-2, column] if @board[row-2][column] == ' '
+                potential_moves << [row-1, column] if board[row-1][column] == ' '
+                potential_moves << [row-2, column] if board[row-2][column] == ' '
             else
-                potential_moves << [row-1, column] if @board[row-1][column] == ' '
+                potential_moves << [row-1, column] if board[row-1][column] == ' '
             end
 
             # can take white pieces
-            potential_moves << [row-1, column+1] if @b_pieces.include?(@board[row-1][column+1])
-            potential_moves << [row-1, column-1] if @b_pieces.include?(@board[row-1][column-1])
+            potential_moves << [row-1, column+1] if @b_pieces.include?(board[row-1][column+1])
+            potential_moves << [row-1, column-1] if @b_pieces.include?(board[row-1][column-1])
 
             # can take white pawns under special en-passant rule
         end
@@ -88,8 +88,8 @@ module Moves
             i_col = column
 
             # returns all potential moves north of the starting position
-            until i_row+1 == 8 || active_pieces.include?(@board[i_row+1][i_col])
-                if enemy_pieces.include?(@board[i_row+1][i_col])
+            until i_row+1 == 8 || active_pieces.include?(board[i_row+1][i_col])
+                if enemy_pieces.include?(board[i_row+1][i_col])
                     potential_moves << [i_row+1,i_col]
                     break
                 else
@@ -102,8 +102,8 @@ module Moves
             i_col = column           
 
             # returns all potential moves south of the starting position
-            until active_pieces.include?(@board[i_row-1][i_col]) || i_row-1 == -1
-                if enemy_pieces.include?(@board[i_row-1][i_col])
+            until active_pieces.include?(board[i_row-1][i_col]) || i_row-1 == -1
+                if enemy_pieces.include?(board[i_row-1][i_col])
                     potential_moves << [i_row-1,i_col]
                     break
                 else
@@ -117,8 +117,8 @@ module Moves
             
 
             # returns all potential moves right of the starting position
-            until active_pieces.include?(@board[i_row][i_col+1]) || i_col+1 == 8
-                if enemy_pieces.include?(@board[i_row][i_col+1])
+            until active_pieces.include?(board[i_row][i_col+1]) || i_col+1 == 8
+                if enemy_pieces.include?(board[i_row][i_col+1])
                     potential_moves << [i_row,i_col+1]
                     break
                 else
@@ -131,8 +131,8 @@ module Moves
             i_col = column
                         
             # returns all potential moves left of the starting position
-            until active_pieces.include?(@board[i_row][i_col-1]) || i_col-1 == -1
-                if enemy_pieces.include?(@board[i_row][i_col-1])
+            until active_pieces.include?(board[i_row][i_col-1]) || i_col-1 == -1
+                if enemy_pieces.include?(board[i_row][i_col-1])
                     potential_moves << [i_row,i_col-1]
                     break
                 else
@@ -169,8 +169,8 @@ module Moves
 
             # returns all potential moving north-east of the starting position
 
-            until i_row+1 == 8 || i_col+1 == 8 || active_pieces.include?(@board[i_row+1][i_col+1])
-                if enemy_pieces.include?(@board[i_row+1][i_col+1])
+            until i_row+1 == 8 || i_col+1 == 8 || active_pieces.include?(board[i_row+1][i_col+1])
+                if enemy_pieces.include?(board[i_row+1][i_col+1])
                     potential_moves << [i_row+1,i_col+1]
                     break
                 else
@@ -184,8 +184,8 @@ module Moves
             i_col = column       
 
             # returns all potential moving south-east of the starting position
-            until i_row-1 == -1 || i_col+1 ==8 || active_pieces.include?(@board[i_row-1][i_col+1])
-                if enemy_pieces.include?(@board[i_row-1][i_col+1])
+            until i_row-1 == -1 || i_col+1 ==8 || active_pieces.include?(board[i_row-1][i_col+1])
+                if enemy_pieces.include?(board[i_row-1][i_col+1])
                     potential_moves << [i_row-1,i_col+1]
                     break
                 else
@@ -199,8 +199,8 @@ module Moves
             i_col = column       
 
             # returns all potential moving south-west of the starting position
-            until i_row-1 == -1 || i_col-1 == -1 || active_pieces.include?(@board[i_row-1][i_col-1])
-                if enemy_pieces.include?(@board[i_row-1][i_col-1])
+            until i_row-1 == -1 || i_col-1 == -1 || active_pieces.include?(board[i_row-1][i_col-1])
+                if enemy_pieces.include?(board[i_row-1][i_col-1])
                     potential_moves << [i_row-1,i_col-1]
                     break
                 else
@@ -214,8 +214,8 @@ module Moves
             i_col = column      
             
             # returns all potential moving north-east of the starting position
-            until  i_row+1 == 8 || i_col-1 == -1 || active_pieces.include?(@board[i_row+1][i_col-1])
-                if enemy_pieces.include?(@board[i_row+1][i_col-1])
+            until  i_row+1 == 8 || i_col-1 == -1 || active_pieces.include?(board[i_row+1][i_col-1])
+                if enemy_pieces.include?(board[i_row+1][i_col-1])
                     potential_moves << [i_row+1,i_col-1]
                     break
                 else
@@ -233,12 +233,12 @@ module Moves
         # moves available for queens
         if actual_piece == $w_quee || actual_piece == $b_quee
             if actual_piece == $w_quee
-                potential_moves << possible_moves(starting_position, $w_rook, turn = 1)
-                potential_moves << possible_moves(starting_position, $w_bish, turn = 1)
+                potential_moves.concat(possible_moves(starting_position, $w_rook, turn = 1))
+                potential_moves.concat(possible_moves(starting_position, $w_bish, turn = 1))
             end
             if actual_piece == $b_quee
-                potential_moves << possible_moves(starting_position, $b_rook, turn = 2)
-                potential_moves << possible_moves(starting_position, $b_bish, turn = 2)
+                potential_moves.concat(possible_moves(starting_position, $b_rook, turn = 2))
+                potential_moves.concat(possible_moves(starting_position, $b_bish, turn = 2))
             end
         end
 
@@ -252,7 +252,7 @@ module Moves
             potential_moves << [i_row, i_col+1]
             potential_moves << [i_row-1, i_col-1]
             potential_moves << [i_row-1, i_col]
-            potential_moves << [i_row-1, i_col-1]
+            potential_moves << [i_row-1, i_col+1]
             potential_moves << [i_row, i_col-1]
             potential_moves << [i_row+1, i_col-1]
         end
