@@ -1,6 +1,7 @@
 # This is a program where two players can play chess against each other in a console
 
 require "pry"
+require "yaml"
 require_relative "moves.rb"
 require_relative "game_functions.rb"
 
@@ -69,12 +70,69 @@ class Game
 
     end
 
+    # checks at the beginning of the game if you'd like to load another file
+    def check_for_load
+        puts "Would you like to load the previous game? Yes / No" 
+
+        answer = gets.chomp.downcase
+
+        until answer == "yes" || answer == "no"
+            puts "That's not a possible input"
+            answer = gets.chomp.downcase
+        end
+
+        if answer == "yes"
+            puts "Your game has been loaded!"
+            load_game
+        else
+            play
+        end
+    end
+
+
+    def save_game_check #asks the play whether or not they want to save the game
+        save = gets.chomp.downcase
+        if save == "yes"
+            save_game(self)
+        elsif save != "no"
+            puts "That's not a possible selection"
+            save_game_check
+        end
+    end
+
+
+    def save_game(game) #saves the game to a folder called "saved_games"
+        yaml = YAML::dump(game)
+        puts "Saved!"
+    
+        Dir.mkdir("saved_games") unless Dir.exists? "saved_games"
+    
+        filename = "saved_games/saved_game.rb"
+    
+        File.open(filename, 'w') do |file|
+            file.write yaml
+        end
+    end
+    
+    def load_game # loads a game
+        filename = YAML.load(File.read("saved_games/saved_game.rb"))
+        filename.play
+    end    
+
     # plays one turn of the game
     def play(board = @board)
 
         if check_for_checkmate
-            puts "test"
+            if @turn == 2
+                puts "White is the winner!"
+            else
+                puts "Black is the winner!"
+            end
+            return
         end
+
+        puts "Do you want to save the game, but keep playing? Yes or No?"
+        save_game_check
 
         remaining_pieces = remaining_pieces_check
 
@@ -185,7 +243,7 @@ class Game
             play
         end
 
-        @board = update_board(starting_position, invert_position_converter(selected_move), actual_piece)
+        @board = update_board(starting_position, invert_position_converter(selected_move), actual_piece, @board)
 
         # resets the en_passant_piece once it's available as a selection for the previous situation
         @en_passant_piece = []
@@ -203,6 +261,11 @@ class Game
             @turn = 1
         end
 
+        play
+
     end
 
 end
+
+game = Game.new()
+game.check_for_load
