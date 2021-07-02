@@ -88,22 +88,55 @@ module Board_Checks
         starting_col = starting_position[1]
         ending_row = ending_position[0]
         ending_col = ending_position[1]
-        if nboard[ending_row][ending_col] != " "
-            @graveyard << nboard[ending_row][ending_col]
-        end
-        nboard[ending_row][ending_col] = actual_piece
-        nboard[starting_row][starting_col] = " "
 
         #en_passant situation
         if actual_piece == $w_pawn || actual_piece == $b_pawn
-            if nboard[ending_row][ending_col] == " "
-                if actual_piece == $w_pawn && en_passant_piece == nboard[ending_row-1][ending_col]
-                    puts 'En-passant has happened'
-                    @graveyard << nboard[ending_row-1][ending_col]
-                    nboard[ending_row-1][ending_col] = " "
+            if nboard[ending_row][ending_col] == ' '
+                # if the piece selected is a pawn, the spot it is moving to is empty
+                # and the ending column doesn't equal the starting column (i.e. it is moving diagonally), it is en-passant
+                if ending_col != starting_col && @en_passant_piece != ''
+                    en_passant_row = invert_position_converter(@en_passant_piece)[0]
+                    en_passant_col = invert_position_converter(@en_passant_piece)[1]
+                    @graveyard << nboard[en_passant_row][en_passant_col]
+                    nboard[en_passant_row][en_passant_col] = ' '
                 end
             end
         end
+
+        #castling situation
+        if actual_piece == $w_king || actual_piece == $b_king
+            # castling must have occured in this situation
+            if (ending_col - starting_col).abs == 2
+                if actual_piece == $w_king && ending_col == 2
+                    nboard[0][4] = ' '
+                    nboard[0][2] = $w_king
+                    nboard[0][0] = ' '
+                    nboard[0][3] = $w_rook
+                elsif actual_piece == $w_king && ending_col == 6
+                    nboard[0][4] = ' '
+                    nboard[0][6] = $w_king
+                    nboard[0][7] = ' '
+                    nboard[0][5] = $w_rook
+                elsif actual_piece == $b_king && ending_col == 2
+                    nboard[7][4] = ' '
+                    nboard[7][2] = $b_king
+                    nboard[7][0] = ' '
+                    nboard[7][3] = $b_rook
+                elsif actual_piece == $b_king && ending_col == 6
+                    nboard[7][4] = ' '
+                    nboard[7][6] = $b_king
+                    nboard[7][7] = ' '
+                    nboard[7][5] = $b_rook
+                end
+            end
+        end
+        
+        if nboard[ending_row][ending_col] != ' '
+            @graveyard << nboard[ending_row][ending_col]
+        end
+
+        nboard[ending_row][ending_col] = actual_piece
+        nboard[starting_row][starting_col] = ' '
 
         nboard
 
@@ -196,6 +229,56 @@ module Board_Checks
 
         # returns true or false based on whether or not a check is present
         status
+
+    end
+
+    def find_enemy_ending_position(board = @board)
+        enemy_pieces = []
+        enemy_filtered_board = [] #filtered board that only includes enemy pieces
+        enemy_ending_positions = [] #array that contains all available moves for enemy pieces
+        enemy_turn = []
+
+        active_filtered_board = []
+        active_ending_positions = []
+        active_pieces = []
+        active_turn = []
+
+        if turn == 1
+            enemy_pieces = @b_pieces
+            active_pieces = @w_pieces
+            enemy_turn = 2
+        else
+            enemy_pieces = @w_pieces
+            active_pieces = @b_pieces
+            enemy_turn = 1
+        end
+
+        # goes through the board and looks for enemy pieces
+        # add the actual enemy piece and the position of the enemy piece to the enemy_filtered_board array
+        row = 0
+        column = 0
+        until row == 8
+            column = 0
+            until column == 8
+                if enemy_pieces.include?(board[row][column])
+                    enemy_filtered_board << [board[row][column], [row, column]]
+                end
+                column += 1
+            end
+            row += 1
+        end
+
+        # creates an array of positions that enemy pieces can move in the next turn
+        enemy_filtered_board.each do |pieceandposition|
+            piece = pieceandposition[0]
+            position = pieceandposition[1]
+            enemy_ending_positions << possible_moves(position, piece, enemy_turn, board)
+            enemy_ending_positions.flatten
+        end
+
+        enemy_ending_positions = enemy_ending_positions.flatten(1)
+        
+        enemy_ending_positions
 
     end
 

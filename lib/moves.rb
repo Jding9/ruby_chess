@@ -43,6 +43,8 @@ module Moves
         # moves available for white pawns
         if actual_piece == $w_pawn
             # if the white pawn is in its original spot, then it can move two spots or one spot
+            return if row == 7
+
             if row == 1
                 potential_moves << [row+1, column] if board[row+1][column] == ' '
                 potential_moves << [row+2, column] if board[row+2][column] == ' '
@@ -56,10 +58,13 @@ module Moves
 
             # can take black pawns under special en-passant rule
             if @en_passant_piece != []
-                pawn_row = invert_position_converter(@en_passant_piece)[0]
-                pawn_col = invert_position_converter(@en_passant_piece)[1]
-                if pawn_row == row && (pawn_col == column + 1 || pawn_col == column - 1)
-                    potential_moves << [pawn_row, pawn_col]
+                passant_row = invert_position_converter(@en_passant_piece)[0]
+                passant_col = invert_position_converter(@en_passant_piece)[1]
+                if passant_row == row && (passant_col == column + 1 || passant_col == column - 1)
+                    # it must be empty in order for us to do en-passant (otherwise the pawn can just take)
+                    if @board[passant_row+1][passant_col] = ' '
+                        potential_moves << [passant_row+1, passant_col]
+                    end
                 end
             end
         end 
@@ -67,6 +72,8 @@ module Moves
         # moves available for black pawns
         if actual_piece == $b_pawn
             # if the black pawn is in its original spot, then it can move two spots or one spot
+            return if row == 0
+
             if row == 6
                 potential_moves << [row-1, column] if board[row-1][column] == ' '
                 potential_moves << [row-2, column] if board[row-2][column] == ' '
@@ -79,6 +86,16 @@ module Moves
             potential_moves << [row-1, column-1] if @b_pieces.include?(board[row-1][column-1])
 
             # can take white pawns under special en-passant rule
+
+            if @en_passant_piece != []
+                passant_row = invert_position_converter(@en_passant_piece)[0]
+                passant_col = invert_position_converter(@en_passant_piece)[1]
+                if passant_row == row && (passant_col == column + 1 || passant_col == column - 1)
+                    if @board[passant_row-1][passant_col] = ' '
+                        potential_moves << [passant_row-1, passant_col]
+                    end
+                end
+            end
         end
 
         # moves available for rooks
@@ -255,6 +272,49 @@ module Moves
             potential_moves << [i_row-1, i_col+1]
             potential_moves << [i_row, i_col-1]
             potential_moves << [i_row+1, i_col-1]
+
+            # castling conditions
+            # The king does not move over a square that is attacked by an enemy piece during the castling move, i.e., when castling, there may not be an enemy piece that can move (in case of pawns: by diagonal movement) to a square that is moved over by the king.
+
+            # The king cannot be in check if they are trying to castle
+            if !@check_condition
+                if actual_piece == $w_king
+                    # checks for left rook potential
+                    if board[0][1] == ' ' && board[0][2] == ' ' && board[0][3] == ' '
+                        binding.pry
+                        if @w_king_move == "not moved" && @w_rook_left == "not moved"
+                            if !enemy_positions.include?([0, 3])
+                                potential_moves << [0, 2]
+                            end
+                        end
+                    #checks for right rook potential
+                    elsif board[0][5] == ' ' && board[0][6] == ' '
+                        if @w_king_move == "not moved" && @w_rook_right == "not moved"
+                            if !enemy_positions.include?([0, 5])
+                                potential_moves << [0, 6]
+                            end
+                        end
+                    end
+                end
+                if actual_piece == $b_king
+                    # checks for left rook potential
+                    if board[7][1] == ' ' && board[7][2] == ' ' && board[7][3] == ' '
+                        if @b_king_move == "not moved" && @b_rook_left == "not moved"
+                            if !enemy_positions.include?([7, 3])
+                                potential_moves << [7, 2]
+                            end 
+                        end
+                    #checks for right rook potential
+                    elsif board[7][5] == ' ' && board[7][6] == ' '
+                        if @b_king_move == "not moved" && @b_rook_right == "not moved"
+                            if !enemy_positions.include?([7, 5])
+                                potential_moves << [7, 6] 
+                            end
+                        end
+                    end
+                end
+            end
+
         end
 
         potential_moves = potential_moves.select { |pos| valid_move?(pos, turn)}
